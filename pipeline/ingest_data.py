@@ -1,7 +1,7 @@
 import pandas as pd
 from sqlalchemy import create_engine
 from tqdm.auto import tqdm
-
+import click
 
 
 dtype = {
@@ -28,37 +28,34 @@ parse_dates = [
     "tpep_dropoff_datetime"
 ]
 
+@click.command()
+@click.option('--pg_user', default='root', help='Usuario de la base de datos MySQL/ClickHouse')
+@click.option('--pg_pass', default='root', help='Contraseña de la base de datos MySQL/ClickHouse')
+@click.option('--pg_host', default='localhost', help='Host de PostgreSQL')
+@click.option('--pg_port', default=5432, help='Puerto de PostgreSQL', type=int)
+@click.option('--pg_db', default='ny_taxi', help='Nombre de la base de datos PostgreSQL')
+@click.option('--year', default=2021, help='Año de los datos', type=int)
+@click.option('--month', default=1, help='Mes de los datos', type=int)
+@click.option('--target_table', default='yellow_taxi_data', help='Tabla destino')
+@click.option('--chunksize', default=100000, help='Tamaño del chunk para procesamiento', type=int)
+
+def run(pg_user, pg_pass, pg_host, pg_port, pg_db, year, month, target_table, chunksize):
 
 
-def run():
-
-    ph_user = 'root'
-    ph_pass = 'root'
-    pg_host = 'localhost'
-    pg_port = 5432
-    pg_db = 'ny_taxi'
-
-
-    year = 2021
-    month = 1
-
-    target_table = 'yellow_taxi_data'
-
-    chuncksize = 100000
 
     prefix = 'https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow/'
     url = f'{prefix}/yellow_tripdata_{year}-{month:02d}.csv.gz'
 
     print(url)
 
-    engine = create_engine(f'postgresql+psycopg://{ph_user}:{ph_pass}@{pg_host}:{pg_port}/{pg_db}')
+    engine = create_engine(f'postgresql+psycopg://{pg_user}:{pg_pass}@{pg_host}:{pg_port}/{pg_db}')
 
     df_iter = pd.read_csv(
         url,
         dtype=dtype,
         parse_dates=parse_dates,
         iterator=True,
-        chunksize=chuncksize
+        chunksize=chunksize
     )
 
     first = True
